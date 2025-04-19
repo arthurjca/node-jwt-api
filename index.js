@@ -1,11 +1,14 @@
-import { readFileSync } from 'fs';
+import 'dotenv/config';  // Carrega as variáveis do .env antes de qualquer coisa
 import express from 'express';
+import { readFileSync } from 'fs';
 import swaggerUi from 'swagger-ui-express';
-import { connectRedis } from './src/config/redis.js';
 import connectDB from './src/config/mongo.js';
-import { getAllUsers, createUser, login } from './src/controllers/userController.js';
-import dotenv from 'dotenv';
-dotenv.config();
+import { connectRedis } from './src/config/redis.js';
+import { getAllUsers, createUser, login, logout, getUser } from './src/controllers/userController.js';
+import validateUser from './src/middlewares/validateUser.js';
+import auth from './src/middlewares/auth.js';
+
+const PORT = process.env.PORT;
 
 const app = express();
 app.use(express.json());
@@ -16,23 +19,22 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.get('/', (req, res) => {
   res.send('API Node.js + JWT');
 });
-app.get('/users', getAllUsers);
-app.post('/users', createUser);
+app.get('/users', auth, getAllUsers);
+app.post('/users', validateUser, createUser);
 app.post('/login', login);
+app.post('/logout', auth, logout)
+app.get('/users/:id', auth, getUser);
 
-const PORT = 3000;
-
-async function startRedis() {
+const startServer = async () => {
   try {
     await connectRedis();
+    await connectDB();
     app.listen(PORT, () => {
-      console.log(`Servidor rodando em http://localhost:${PORT}`);
+      console.log(`Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error('Falha ao iniciar servidor:', error);
+    console.error('Error starting server:', error);
   }
 }
 
-startRedis();
-
-connectDB();  
+startServer();

@@ -1,10 +1,10 @@
-import pkg from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { hash } from 'bcryptjs';
 
-const { sign } = pkg;
-const secret = process.env.JWT_SECRET;
+const { sign } = jwt;
 
 const generateToken = (user) => {
+  const secret = process.env.JWT_SECRET;
   return sign({ id: user.id }, secret, { expiresIn: '1h' });
 };
 

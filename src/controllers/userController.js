@@ -1,8 +1,7 @@
 import { compareSync } from 'bcryptjs';
 import { generateToken, hashPassword } from '../auth/auth.js';
+import { redisClient } from '../config/redis.js';
 import User from '../models/User.js';
-
-const users = [];
 
 const getAllUsers = async (req, res) => {
   const users = await User.find({}, 'name email createdAt');
@@ -16,23 +15,43 @@ const createUser = async (req, res) => {
     const user = await User.create({ name, email, password: hashedPassword });
     res.status(201).json({ id: user._id, name, email });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "E-mail already taken" });
+    }
+    res.status(500).json({ error: err.message });
   }
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  // Simulando um usuário válido (em um app real, buscaria no banco de dados)  
   const user = await User.findOne({ email });
-  console.log({ user })
 
   if (compareSync(password, user.password)) {
-    console.log({ oi: "oi" })
     const token = generateToken(user);
     res.json({ token });
   } else {
-    res.status(401).json({ error: "Credenciais inválidas" });
+    res.status(401).json({ error: "Invalid credentials" });
   }
 };
 
-export { getAllUsers, createUser, login };
+const logout = async (req, res) => {
+  const token = req.headers.authorization;
+  await redisClient.set(`invalidated_tokens:${token}`, '1', { EX: 3600 });
+  res.status(200).json({ message: 'Logout done' });
+}
+
+const getUser = async (req, res) => {
+  const { id } = req.params;
+  const cachedUser = await redisClient.get(`user:${id}`);
+
+  if (cachedUser)
+    return res.json(JSON.parse(cachedUser));
+
+  const user = await User.findById(id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  await redisClient.set(`user:${id}`, JSON.stringify(user), { EX: 1800 });
+  res.json(user);
+};
+
+export { getAllUsers, createUser, login, logout, getUser };
