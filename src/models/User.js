@@ -9,7 +9,11 @@ const UserSchema = new Schema({
     match: /^\S+@\S+\.\S+$/
   },
   password: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  refreshTokens: [{
+    token: String,
+    expiresAt: Date,
+  }],
 });
 
 export default model('User', UserSchema);  

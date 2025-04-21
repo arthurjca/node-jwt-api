@@ -1,5 +1,4 @@
-import { compareSync } from 'bcryptjs';
-import { generateToken, hashPassword } from '../auth/auth.js';
+import { hashPassword } from '../auth/auth.js';
 import { redisClient } from '../config/redis.js';
 import User from '../models/User.js';
 
@@ -22,24 +21,6 @@ const createUser = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-
-  if (compareSync(password, user.password)) {
-    const token = generateToken(user);
-    res.json({ token });
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
-  }
-};
-
-const logout = async (req, res) => {
-  const token = req.headers.authorization;
-  await redisClient.set(`invalidated_tokens:${token}`, '1', { EX: 3600 });
-  res.status(200).json({ message: 'Logout done' });
-}
-
 const getUser = async (req, res) => {
   const { id } = req.params;
   const cachedUser = await redisClient.get(`user:${id}`);
@@ -54,4 +35,4 @@ const getUser = async (req, res) => {
   res.json(user);
 };
 
-export { getAllUsers, createUser, login, logout, getUser };
+export { getAllUsers, createUser, getUser };

@@ -4,7 +4,8 @@ import { readFileSync } from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import connectDB from './src/config/mongo.js';
 import { connectRedis } from './src/config/redis.js';
-import { getAllUsers, createUser, login, logout, getUser } from './src/controllers/userController.js';
+import { getAllUsers, createUser, getUser } from './src/controllers/userController.js';
+import { login, logout, refreshToken } from './src/controllers/authController.js';
 import validateUser from './src/middlewares/validateUser.js';
 import auth from './src/middlewares/auth.js';
 
@@ -24,6 +25,7 @@ app.post('/users', validateUser, createUser);
 app.post('/login', login);
 app.post('/logout', auth, logout)
 app.get('/users/:id', auth, getUser);
+app.post('/refresh-token', refreshToken);
 
 const startServer = async () => {
   try {
