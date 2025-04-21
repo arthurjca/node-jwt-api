@@ -4,7 +4,7 @@ import User from '../models/User.js';
 
 const getAllUsers = async (req, res) => {
   const users = await User.find({}, 'name email createdAt');
-  res.json(users);
+  res.status(200).json(users);
 };
 
 const createUser = async (req, res) => {
@@ -26,13 +26,19 @@ const getUser = async (req, res) => {
   const cachedUser = await redisClient.get(`user:${id}`);
 
   if (cachedUser)
-    return res.json(JSON.parse(cachedUser));
+    return res.status(200).json(JSON.parse(cachedUser));
 
   const user = await User.findById(id);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   await redisClient.set(`user:${id}`, JSON.stringify(user), { EX: 1800 });
-  res.json(user);
+  res.status(200).json(user);
 };
 
-export { getAllUsers, createUser, getUser };
+const deleteUser = async (req, res) => {
+  const deletedUser = await User.findByIdAndDelete(req.params.id);
+  if (!deletedUser) return res.status(404).json({ error: 'User not found' });
+  res.status(200).json({ message: 'User deleted' });
+}
+
+export { getAllUsers, createUser, getUser, deleteUser };

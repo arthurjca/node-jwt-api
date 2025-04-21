@@ -1,5 +1,7 @@
 import { Schema, model } from 'mongoose';
 
+const roles = ['USER', 'ADMIN', 'MODERATOR'];
+
 const UserSchema = new Schema({
   name: { type: String, required: true },
   email: {
@@ -14,6 +16,11 @@ const UserSchema = new Schema({
     token: String,
     expiresAt: Date,
   }],
+  role: {
+    type: String,
+    enum: roles,
+    default: 'USER'
+  }
 });
 
 export default model('User', UserSchema);  

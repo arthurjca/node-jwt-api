@@ -4,13 +4,12 @@ import { hash } from 'bcryptjs';
 const { sign } = jwt;
 
 const generateAccessToken = (user) => {
-  const secret = process.env.JWT_SECRET;
-  return sign({ id: user.id }, secret, { expiresIn: '1h' });
+  return sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
 const generateRefreshToken = (userId) => {
-  return jwt.sign(
-    { userId },
+  return sign(
+    { userId, },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: '7d' }
   );

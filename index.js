@@ -1,12 +1,13 @@
-import 'dotenv/config';  // Carrega as variáveis do .env antes de qualquer coisa
+import 'dotenv/config';
 import express from 'express';
 import { readFileSync } from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import connectDB from './src/config/mongo.js';
 import { connectRedis } from './src/config/redis.js';
-import { getAllUsers, createUser, getUser } from './src/controllers/userController.js';
+import { getAllUsers, createUser, getUser, deleteUser } from './src/controllers/userController.js';
 import { login, logout, refreshToken } from './src/controllers/authController.js';
 import validateUser from './src/middlewares/validateUser.js';
+import checkRole from './src/middlewares/checkRole.js';
 import auth from './src/middlewares/auth.js';
 
 const PORT = process.env.PORT;
@@ -26,6 +27,7 @@ app.post('/login', login);
 app.post('/logout', auth, logout)
 app.get('/users/:id', auth, getUser);
 app.post('/refresh-token', refreshToken);
+app.delete('/users/:id', auth, checkRole(['ADMIN', 'MODERATOR']), deleteUser);
 
 const startServer = async () => {
   try {
